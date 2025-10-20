@@ -5,84 +5,52 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Question asking</title>
   <style>
-    :root {
-      --accent: #0078d4;
-      --accent-dark: #005a9e;
-      --bg: #ffffff;
-      --panel: #fafafa;
-      --muted: #666;
-      --border: #e6e6e6;
+    :root{
+      --accent:#0078d4; --accent-dark:#005a9e; --panel:#fafafa; --border:#e6e6e6;
+      --correct:#198754; --wrong:#d9534f; --note:#fd7e14;
     }
-    html,body { height:100%; }
-    body {
+    body{
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      margin: 24px;
-      color: #222;
-      background: var(--bg);
-      line-height: 1.45;
+      margin:20px; color:#222; line-height:1.45;
     }
-    header { margin-bottom: 18px; }
-    h1 { margin: 0 0 6px 0; font-size: 1.35rem; }
-    p.lead { margin: 0 0 12px 0; color: var(--muted); max-width: 54rem; }
-    #quiz { margin-top: 12px; }
-    .question {
-      border: 1px solid var(--border);
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 8px;
-      background: var(--panel);
+    h1{ margin:0 0 10px 0; font-size:1.3rem; }
+    main{ max-width:900px; }
+    .question{
+      border:1px solid var(--border);
+      background:var(--panel);
+      padding:12px; margin:12px 0; border-radius:8px;
     }
-    .question h4 { margin: 0 0 8px 0; font-size: 1rem; }
-    .question p { margin: 6px 0; }
-    .choices label { display:block; margin:6px 0; cursor:pointer; }
-    .choices input[disabled] + span { color: #999; }
-    .feedback { margin-top: 8px; min-height: 1.2em; }
-    .result-badge {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 18px;
-      color: #fff;
-      font-weight: 700;
-      margin-left: 8px;
-      font-size: 0.85rem;
+    .question h4{ margin:0 0 8px 0; font-size:1rem; }
+    .answer-sentence{ margin:6px 0 10px 0; }
+    .choices label{ display:block; margin:6px 0; cursor:pointer; }
+    .controls-row{ display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+    button.submit-q{
+      background:var(--accent); color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer;
     }
-    .result-correct { background: #198754; }
-    .result-wrong { background: #d9534f; }
-    .result-unanswered { background: #fd7e14; }
-    button {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 10px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.95rem;
+    button.submit-q[disabled]{ opacity:.6; cursor:not-allowed; }
+    .feedback{ margin-top:10px; min-height:2.2em; }
+    .badge{
+      display:inline-block; padding:6px 10px; border-radius:16px; color:#fff; font-weight:700;
+      font-size:.9rem; margin-right:8px;
     }
-    button:hover { background: var(--accent-dark); }
-    #controls { margin-top: 16px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    #score { margin-top: 6px; font-weight:700; color:#222; }
-    footer { margin-top: 20px; color: var(--muted); font-size: 0.9rem; }
-    @media (max-width:520px) {
-      body { margin: 12px; }
-    }
+    .badge.correct{ background:var(--correct); }
+    .badge.wrong{ background:var(--wrong); }
+    .badge.unanswered{ background:var(--note); }
+    .explain{ margin-top:6px; color:#333; }
+    #score{ margin-top:16px; font-weight:700; }
+    @media (max-width:520px){ body{ margin:12px } }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Question asking</h1>
-  </header>
-
   <main>
+    <h1>Question asking</h1>
+
     <div id="quiz" aria-live="polite"></div>
 
-    <div id="controls">
-      <button id="submitAll" type="button">Submit All Answers / Finish Test</button>
-      <div id="score" role="status" aria-atomic="true"></div>
-    </div>
+    <div id="score" aria-atomic="true"></div>
   </main>
 
   <script>
-    // Quiz data: each item has answer (the sentence), correct question, three distractors, and an explanation.
     const quizData = [
       {
         answer: "I'm going to London next week.",
@@ -92,7 +60,7 @@
           "Where are you going next week?",
           "How are you going to London?"
         ],
-        explanation: "The sentence gives a time frame, so the natural question to obtain that answer is 'When...?' asking about time."
+        explanation: "The answer gives a time, so the question must ask 'When...?' about the date/time."
       },
       {
         answer: "Yes, I've already finished the report.",
@@ -102,7 +70,7 @@
           "Who finished the report?",
           "Why have you finished the report?"
         ],
-        explanation: "The reply uses the present perfect ('I've already finished'), so the matching question uses the present perfect 'Have you...?'"
+        explanation: "Present perfect ('I've already finished') matches the question 'Have you...?'"
       },
       {
         answer: "No, I didn't go because I was ill.",
@@ -112,7 +80,7 @@
           "When were you ill?",
           "Who was ill?"
         ],
-        explanation: "The answer explains the reason for not going, so the appropriate question is 'Why didn't you go?'"
+        explanation: "The reply explains the reason for not going, so it answers 'Why...?'"
       },
       {
         answer: "I studied French for five years at university.",
@@ -122,7 +90,7 @@
           "Did you study French at school?",
           "Why did you study French?"
         ],
-        explanation: "The answer gives a duration, so the question should ask 'How long...?'"
+        explanation: "The answer gives a duration, so 'How long...?' is appropriate."
       },
       {
         answer: "She moved here in 2010.",
@@ -132,7 +100,7 @@
           "Who moved here in 2010?",
           "Has she moved here?"
         ],
-        explanation: "The answer provides a time (2010), so the appropriate question asks 'When...?'"
+        explanation: "The sentence supplies a year, therefore the relevant question is 'When...?'"
       },
       {
         answer: "Because the weather was terrible.",
@@ -142,7 +110,7 @@
           "Did you enjoy the picnic?",
           "Where was the picnic?"
         ],
-        explanation: "The answer gives a reason, so the question should be 'Why...?' about cancelling the picnic."
+        explanation: "The reply provides a reason for cancelling, so it answers 'Why...?'"
       },
       {
         answer: "No, she hasn't seen the film yet.",
@@ -152,7 +120,7 @@
           "When will she see the film?",
           "Who saw the film?"
         ],
-        explanation: "The reply uses present perfect negative, matching the question 'Has she... yet?'"
+        explanation: "The present perfect negative 'hasn't seen' pairs with 'Has she... yet?'"
       },
       {
         answer: "About £40.",
@@ -162,7 +130,7 @@
           "Where did you buy it?",
           "Who bought it?"
         ],
-        explanation: "The answer gives a monetary amount, so the question should be 'How much...?'"
+        explanation: "A monetary amount answers 'How much...?'"
       },
       {
         answer: "I prefer tea to coffee.",
@@ -172,7 +140,7 @@
           "How do you take your tea?",
           "Which is cheaper, tea or coffee?"
         ],
-        explanation: "The answer expresses a preference between two options, so 'Do you prefer tea or coffee?' is correct."
+        explanation: "The sentence expresses a preference between two options, so 'Do you prefer...?'"
       },
       {
         answer: "Yes, I can speak a little Spanish.",
@@ -182,7 +150,7 @@
           "Where did you learn Spanish?",
           "Will you speak Spanish?"
         ],
-        explanation: "The answer replies to ability: 'Can you...?' asks if the person is able to speak Spanish."
+        explanation: "This answers ability; 'Can you...?' asks about ability."
       },
       {
         answer: "I bought it last Friday.",
@@ -192,7 +160,7 @@
           "How much did it cost?",
           "Where did you buy it?"
         ],
-        explanation: "The sentence gives a time ('last Friday'), so the matching question is 'When...?'"
+        explanation: "The reply indicates a time ('last Friday') so ask 'When...?'"
       },
       {
         answer: "At the station, just outside platform 3.",
@@ -202,7 +170,7 @@
           "Who will be at platform 3?",
           "Why are you at the station?"
         ],
-        explanation: "The reply gives a location, so the natural question is 'Where...?'"
+        explanation: "The reply gives a place, so the question should be 'Where...?'"
       },
       {
         answer: "No, thank you. I'm full.",
@@ -212,7 +180,7 @@
           "Why are you full?",
           "Do you like cake?"
         ],
-        explanation: "The answer is a polite refusal to an offer of more cake, so 'Would you like more cake?' fits."
+        explanation: "A polite refusal to more food answers the offer 'Would you like...?'"
       },
       {
         answer: "You need to take the second turning on the left.",
@@ -222,7 +190,7 @@
           "Is the post office open on Sunday?",
           "Where is the second turning?"
         ],
-        explanation: "The instruction describes directions, so the question is 'How do I get to...?'"
+        explanation: "Directions respond to 'How do I get to...?'"
       },
       {
         answer: "Because I forgot my keys.",
@@ -232,7 +200,7 @@
           "Where are your keys?",
           "Who had your keys?"
         ],
-        explanation: "The answer gives the reason for not getting into the house, therefore 'Why couldn't you...?' is appropriate."
+        explanation: "This gives the reason for not getting in, so 'Why couldn't you...?'"
       },
       {
         answer: "By train; it was much faster than driving.",
@@ -242,7 +210,7 @@
           "Did you like Manchester?",
           "Why did you choose Manchester?"
         ],
-        explanation: "The reply states the mode of transport, so the question should be 'How did you travel...?'"
+        explanation: "Mode of transport answers 'How did you travel...?'"
       },
       {
         answer: "I've lived here since 2018.",
@@ -252,7 +220,7 @@
           "Did you live here before 2018?",
           "Why did you move here in 2018?"
         ],
-        explanation: "The answer gives a period from 2018 to now, so 'How long have you...?' (present perfect) is the right form."
+        explanation: "A period from 2018 to now requires 'How long have you...?'"
       },
       {
         answer: "No, it's not my responsibility.",
@@ -262,7 +230,7 @@
           "Why isn't it your responsibility?",
           "When is it your responsibility?"
         ],
-        explanation: "The statement directly answers a yes/no question about responsibility, so 'Is that your responsibility?' matches."
+        explanation: "A direct yes/no response matches 'Is that your responsibility?'"
       },
       {
         answer: "She'll arrive at about half past three.",
@@ -272,7 +240,7 @@
           "Who will arrive at half past three?",
           "Where will she arrive?"
         ],
-        explanation: "The answer provides a time in the future, so the correct question is 'When will she arrive?'"
+        explanation: "A future time answer corresponds to 'When will...?'"
       },
       {
         answer: "No, I haven't met him before.",
@@ -282,215 +250,171 @@
           "Who hasn't met him?",
           "Why haven't you met him?"
         ],
-        explanation: "The reply uses present perfect negative to state no prior meeting, matching 'Have you met him before?'"
+        explanation: "Present perfect negative indicates 'Have you... before?'"
       }
     ];
 
-    // Utilities
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+    function shuffle(arr){
+      for(let i=arr.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [arr[i],arr[j]]=[arr[j],arr[i]];
       }
-      return array;
+      return arr;
     }
 
-    function disableQuestionRadios(qIndex) {
-      const inputs = document.querySelectorAll('input[name="q' + qIndex + '"]');
-      inputs.forEach(inp => {
-        inp.disabled = true;
-        inp.setAttribute('aria-disabled', 'true');
-      });
-    }
+    const quizDiv = document.getElementById('quiz');
 
-    function createQuestionElement(itemIndex, item) {
-      const container = document.createElement('section');
-      container.className = 'question';
-      container.setAttribute('aria-labelledby', `q${itemIndex}_label`);
+    function buildQuestion(index, item){
+      const section = document.createElement('section');
+      section.className = 'question';
+      section.dataset.index = index;
 
-      const qNumber = document.createElement('h4');
-      qNumber.id = `q${itemIndex}_label`;
-      qNumber.textContent = `Question ${itemIndex + 1}`;
-      container.appendChild(qNumber);
+      const h = document.createElement('h4');
+      h.textContent = `Question ${index + 1}`;
+      section.appendChild(h);
 
-      const answerPara = document.createElement('p');
-      answerPara.innerHTML = '<strong>Given answer:</strong> ' + item.answer;
-      container.appendChild(answerPara);
+      const ans = document.createElement('div');
+      ans.className = 'answer-sentence';
+      ans.innerHTML = `<strong>Given answer:</strong> ${item.answer}`;
+      section.appendChild(ans);
 
-      const form = document.createElement('div');
-      form.className = 'choices';
-      form.setAttribute('role', 'radiogroup');
-      form.setAttribute('aria-label', 'Choices');
-
-      // Build choices array with correct + distractors and shuffle
-      const choices = [ {text: item.correct, correct: true} ]
-        .concat(item.distractors.map(d => ({text: d, correct: false})));
+      // choices
+      const choicesDiv = document.createElement('div');
+      choicesDiv.className = 'choices';
+      const choices = [ {text:item.correct, correct:true} ].concat(
+        item.distractors.map(d => ({text:d, correct:false}))
+      );
       shuffle(choices);
 
-      choices.forEach((choice, idx) => {
-        const id = `q${itemIndex}_c${idx}`;
+      choices.forEach((c, i)=>{
+        const id = `q${index}_c${i}`;
         const label = document.createElement('label');
-        label.setAttribute('for', id);
-        label.style.display = 'block';
-        label.style.margin = '6px 0';
-        label.style.cursor = 'pointer';
+        label.htmlFor = id;
 
         const input = document.createElement('input');
         input.type = 'radio';
-        input.name = `q${itemIndex}`;
-        input.value = choice.text;
+        input.name = `q${index}`;
         input.id = id;
-        input.dataset.correct = choice.correct ? '1' : '0';
+        input.value = c.text;
+        input.dataset.correct = c.correct ? '1' : '0';
         input.style.marginRight = '8px';
-        input.setAttribute('aria-checked', 'false');
 
         const span = document.createElement('span');
-        span.textContent = choice.text;
+        span.textContent = c.text;
 
         label.appendChild(input);
         label.appendChild(span);
-        form.appendChild(label);
+        choicesDiv.appendChild(label);
       });
+
+      section.appendChild(choicesDiv);
+
+      // controls: per-question submit
+      const controls = document.createElement('div');
+      controls.className = 'controls-row';
+
+      const submitBtn = document.createElement('button');
+      submitBtn.type = 'button';
+      submitBtn.className = 'submit-q';
+      submitBtn.textContent = 'Submit this answer';
+      submitBtn.dataset.qindex = index;
+
+      controls.appendChild(submitBtn);
+      section.appendChild(controls);
 
       const feedback = document.createElement('div');
       feedback.className = 'feedback';
-      feedback.setAttribute('aria-live', 'polite');
-      feedback.style.marginTop = '8px';
-      container.appendChild(form);
-      container.appendChild(feedback);
+      feedback.setAttribute('aria-live','polite');
+      section.appendChild(feedback);
 
-      return container;
+      // event: per-question submit
+      submitBtn.addEventListener('click', () => {
+        handleSubmitForQuestion(index, item, section);
+      });
+
+      return section;
     }
 
-    // Render quiz
-    const quizDiv = document.getElementById('quiz');
-    quizData.forEach((item, i) => {
-      quizDiv.appendChild(createQuestionElement(i, item));
-    });
+    function lockQuestion(index){
+      const inputs = document.querySelectorAll(`input[name="q${index}"]`);
+      inputs.forEach(inp => {
+        inp.disabled = true;
+      });
+      const btn = document.querySelector(`button.submit-q[data-qindex="${index}"]`);
+      if(btn) btn.disabled = true;
+    }
 
-    // Per-question immediate feedback and lock answer after selection
-    quizDiv.addEventListener('change', (e) => {
-      if (e.target.matches('input[type="radio"]')) {
-        const name = e.target.name; // q#
-        const qIndex = parseInt(name.replace('q',''), 10);
-        const selectedCorrect = e.target.dataset.correct === '1';
-        const feedbackDiv = e.target.closest('.question').querySelector('.feedback');
-        feedbackDiv.innerHTML = '';
+    function handleSubmitForQuestion(index, item, section){
+      const selected = section.querySelector(`input[name="q${index}"]:checked`);
+      const feedback = section.querySelector('.feedback');
+      feedback.innerHTML = '';
 
-        // Disable inputs for this question to lock the choice
-        disableQuestionRadios(qIndex);
-
-        // Show badge and feedback
+      if(!selected){
         const badge = document.createElement('span');
-        badge.className = 'result-badge';
-        if (selectedCorrect) {
-          badge.classList.add('result-correct');
-          badge.textContent = 'Correct';
-          feedbackDiv.appendChild(badge);
-          const right = document.createElement('div');
-          right.style.color = 'green';
-          right.style.fontWeight = '600';
-          right.style.marginTop = '8px';
-          right.textContent = 'Well done. That question naturally elicits the given answer.';
-          feedbackDiv.appendChild(right);
-        } else {
-          badge.classList.add('result-wrong');
-          badge.textContent = 'Incorrect';
-          feedbackDiv.appendChild(badge);
-          const wrong = document.createElement('div');
-          wrong.style.color = 'darkred';
-          wrong.style.fontWeight = '600';
-          wrong.style.marginTop = '8px';
-          wrong.textContent = 'Your choice is not the most natural question to get that answer.';
-          const correctQ = document.createElement('div');
-          correctQ.style.marginTop = '6px';
-          correctQ.innerHTML = '<strong>Correct question:</strong> ' + quizData[qIndex].correct;
-          const explain = document.createElement('div');
-          explain.style.marginTop = '6px';
-          explain.innerHTML = '<strong>Explanation:</strong> ' + quizData[qIndex].explanation;
-          feedbackDiv.appendChild(wrong);
-          feedbackDiv.appendChild(correctQ);
-          feedbackDiv.appendChild(explain);
-        }
-      }
-    });
+        badge.className = 'badge unanswered';
+        badge.textContent = 'No answer selected';
+        feedback.appendChild(badge);
 
-    // Submit all and calculate score
-    document.getElementById('submitAll').addEventListener('click', () => {
-      let total = quizData.length;
-      let correctCount = 0;
-      for (let i = 0; i < total; i++) {
-        const selected = document.querySelector('input[name="q' + i + '"]:checked');
-        const qDiv = document.querySelectorAll('.question')[i];
-        const feedbackDiv = qDiv.querySelector('.feedback');
-        if (!selected) {
-          // Mark unanswered as incorrect, show badge and correct answer, and disable radios
-          feedbackDiv.innerHTML = '';
-          const badge = document.createElement('span');
-          badge.className = 'result-badge result-unanswered';
-          badge.textContent = 'Unanswered';
-          feedbackDiv.appendChild(badge);
-          const warn = document.createElement('div');
-          warn.style.color = 'darkorange';
-          warn.style.fontWeight = '600';
-          warn.style.marginTop = '8px';
-          warn.textContent = 'No answer selected. Marked incorrect.';
-          const correctQ = document.createElement('div');
-          correctQ.style.marginTop = '6px';
-          correctQ.innerHTML = '<strong>Correct question:</strong> ' + quizData[i].correct;
-          const explain = document.createElement('div');
-          explain.style.marginTop = '6px';
-          explain.innerHTML = '<strong>Explanation:</strong> ' + quizData[i].explanation;
-          feedbackDiv.appendChild(warn);
-          feedbackDiv.appendChild(correctQ);
-          feedbackDiv.appendChild(explain);
-          disableQuestionRadios(i);
-          continue;
-        }
-        if (selected.dataset.correct === '1') {
-          correctCount++;
-          // ensure feedback reflects correct if not already present
-          feedbackDiv.innerHTML = '';
-          const badge = document.createElement('span');
-          badge.className = 'result-badge result-correct';
-          badge.textContent = 'Correct';
-          feedbackDiv.appendChild(badge);
-          const right = document.createElement('div');
-          right.style.color = 'green';
-          right.style.fontWeight = '600';
-          right.style.marginTop = '8px';
-          right.textContent = 'Well done. That question naturally elicits the given answer.';
-          feedbackDiv.appendChild(right);
-        } else {
-          feedbackDiv.innerHTML = '';
-          const badge = document.createElement('span');
-          badge.className = 'result-badge result-wrong';
-          badge.textContent = 'Incorrect';
-          feedbackDiv.appendChild(badge);
-          const wrong = document.createElement('div');
-          wrong.style.color = 'darkred';
-          wrong.style.fontWeight = '600';
-          wrong.style.marginTop = '8px';
-          wrong.textContent = 'Your choice is not the most natural question to get that answer.';
-          const correctQ = document.createElement('div');
-          correctQ.style.marginTop = '6px';
-          correctQ.innerHTML = '<strong>Correct question:</strong> ' + quizData[i].correct;
-          const explain = document.createElement('div');
-          explain.style.marginTop = '6px';
-          explain.innerHTML = '<strong>Explanation:</strong> ' + quizData[i].explanation;
-          feedbackDiv.appendChild(wrong);
-          feedbackDiv.appendChild(correctQ);
-          feedbackDiv.appendChild(explain);
-        }
-        // Lock the question after submission
-        disableQuestionRadios(i);
+        const note = document.createElement('div');
+        note.className = 'explain';
+        note.innerHTML = `<strong>Correct question:</strong> ${item.correct}<br><strong>Explanation:</strong> ${item.explanation}`;
+        feedback.appendChild(note);
+        lockQuestion(index);
+        updateScoreDisplay();
+        return;
       }
 
+      const isCorrect = selected.dataset.correct === '1';
+      if(isCorrect){
+        const badge = document.createElement('span');
+        badge.className = 'badge correct';
+        badge.textContent = 'Correct';
+        feedback.appendChild(badge);
+
+        const text = document.createElement('div');
+        text.className = 'explain';
+        text.textContent = 'That question naturally elicits the given answer.';
+        feedback.appendChild(text);
+      } else {
+        const badge = document.createElement('span');
+        badge.className = 'badge wrong';
+        badge.textContent = 'Incorrect';
+        feedback.appendChild(badge);
+
+        const corr = document.createElement('div');
+        corr.className = 'explain';
+        corr.innerHTML = `<strong>Correct question:</strong> ${item.correct}<br><strong>Explanation:</strong> ${item.explanation}`;
+        feedback.appendChild(corr);
+      }
+
+      lockQuestion(index);
+      updateScoreDisplay();
+    }
+
+    function updateScoreDisplay(){
+      // compute how many submitted and how many correct among submitted
+      const total = quizData.length;
+      let submitted = 0, correct = 0;
+      for(let i=0;i<total;i++){
+        const inputs = document.querySelectorAll(`input[name="q${i}"]`);
+        const anyDisabled = Array.from(inputs).some(inp => inp.disabled);
+        if(anyDisabled){
+          submitted++;
+          const selected = document.querySelector(`input[name="q${i}"]:checked`);
+          if(selected && selected.dataset.correct === '1') correct++;
+        }
+      }
       const scoreDiv = document.getElementById('score');
-      const percent = Math.round((correctCount / total) * 100);
-      scoreDiv.textContent = 'You scored ' + correctCount + ' out of ' + total + ' (' + percent + '%).';
-      scoreDiv.scrollIntoView({behavior: 'smooth'});
+      scoreDiv.textContent = `Progress: ${submitted}/${total} answered. Current correct: ${correct}/${total}.`;
+    }
+
+    // render all questions
+    quizData.forEach((item, idx)=>{
+      quizDiv.appendChild(buildQuestion(idx, item));
     });
+
+    // initial score display
+    updateScoreDisplay();
   </script>
 </body>
 </html>
