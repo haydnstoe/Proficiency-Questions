@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>British English Question-Formation Quiz</title>
+  <title>Question asking</title>
   <style>
     :root {
       --accent: #0078d4;
@@ -35,7 +35,20 @@
     .question h4 { margin: 0 0 8px 0; font-size: 1rem; }
     .question p { margin: 6px 0; }
     .choices label { display:block; margin:6px 0; cursor:pointer; }
+    .choices input[disabled] + span { color: #999; }
     .feedback { margin-top: 8px; min-height: 1.2em; }
+    .result-badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 18px;
+      color: #fff;
+      font-weight: 700;
+      margin-left: 8px;
+      font-size: 0.85rem;
+    }
+    .result-correct { background: #198754; }
+    .result-wrong { background: #d9534f; }
+    .result-unanswered { background: #fd7e14; }
     button {
       background: var(--accent);
       color: #fff;
@@ -56,8 +69,7 @@
 </head>
 <body>
   <header>
-    <h1>British English Question-Formation Quiz</h1>
-    <p class="lead">Each item shows a sentence given as the answer. Choose the question that would naturally elicit that answer. Four choices appear in random order for each question. Immediate feedback is shown after selecting an answer. Click "Submit All Answers" to finish and see your overall score.</p>
+    <h1>Question asking</h1>
   </header>
 
   <main>
@@ -283,6 +295,14 @@
       return array;
     }
 
+    function disableQuestionRadios(qIndex) {
+      const inputs = document.querySelectorAll('input[name="q' + qIndex + '"]');
+      inputs.forEach(inp => {
+        inp.disabled = true;
+        inp.setAttribute('aria-disabled', 'true');
+      });
+    }
+
     function createQuestionElement(itemIndex, item) {
       const container = document.createElement('section');
       container.className = 'question';
@@ -324,8 +344,11 @@
         input.style.marginRight = '8px';
         input.setAttribute('aria-checked', 'false');
 
+        const span = document.createElement('span');
+        span.textContent = choice.text;
+
         label.appendChild(input);
-        label.appendChild(document.createTextNode(choice.text));
+        label.appendChild(span);
         form.appendChild(label);
       });
 
@@ -345,7 +368,7 @@
       quizDiv.appendChild(createQuestionElement(i, item));
     });
 
-    // Per-question immediate feedback
+    // Per-question immediate feedback and lock answer after selection
     quizDiv.addEventListener('change', (e) => {
       if (e.target.matches('input[type="radio"]')) {
         const name = e.target.name; // q#
@@ -353,17 +376,32 @@
         const selectedCorrect = e.target.dataset.correct === '1';
         const feedbackDiv = e.target.closest('.question').querySelector('.feedback');
         feedbackDiv.innerHTML = '';
+
+        // Disable inputs for this question to lock the choice
+        disableQuestionRadios(qIndex);
+
+        // Show badge and feedback
+        const badge = document.createElement('span');
+        badge.className = 'result-badge';
         if (selectedCorrect) {
+          badge.classList.add('result-correct');
+          badge.textContent = 'Correct';
+          feedbackDiv.appendChild(badge);
           const right = document.createElement('div');
           right.style.color = 'green';
           right.style.fontWeight = '600';
-          right.textContent = 'Correct.';
+          right.style.marginTop = '8px';
+          right.textContent = 'Well done. That question naturally elicits the given answer.';
           feedbackDiv.appendChild(right);
         } else {
+          badge.classList.add('result-wrong');
+          badge.textContent = 'Incorrect';
+          feedbackDiv.appendChild(badge);
           const wrong = document.createElement('div');
           wrong.style.color = 'darkred';
           wrong.style.fontWeight = '600';
-          wrong.textContent = 'Incorrect.';
+          wrong.style.marginTop = '8px';
+          wrong.textContent = 'Your choice is not the most natural question to get that answer.';
           const correctQ = document.createElement('div');
           correctQ.style.marginTop = '6px';
           correctQ.innerHTML = '<strong>Correct question:</strong> ' + quizData[qIndex].correct;
@@ -386,10 +424,16 @@
         const qDiv = document.querySelectorAll('.question')[i];
         const feedbackDiv = qDiv.querySelector('.feedback');
         if (!selected) {
+          // Mark unanswered as incorrect, show badge and correct answer, and disable radios
           feedbackDiv.innerHTML = '';
+          const badge = document.createElement('span');
+          badge.className = 'result-badge result-unanswered';
+          badge.textContent = 'Unanswered';
+          feedbackDiv.appendChild(badge);
           const warn = document.createElement('div');
           warn.style.color = 'darkorange';
           warn.style.fontWeight = '600';
+          warn.style.marginTop = '8px';
           warn.textContent = 'No answer selected. Marked incorrect.';
           const correctQ = document.createElement('div');
           correctQ.style.marginTop = '6px';
@@ -400,22 +444,34 @@
           feedbackDiv.appendChild(warn);
           feedbackDiv.appendChild(correctQ);
           feedbackDiv.appendChild(explain);
+          disableQuestionRadios(i);
           continue;
         }
         if (selected.dataset.correct === '1') {
           correctCount++;
+          // ensure feedback reflects correct if not already present
           feedbackDiv.innerHTML = '';
+          const badge = document.createElement('span');
+          badge.className = 'result-badge result-correct';
+          badge.textContent = 'Correct';
+          feedbackDiv.appendChild(badge);
           const right = document.createElement('div');
           right.style.color = 'green';
           right.style.fontWeight = '600';
-          right.textContent = 'Correct.';
+          right.style.marginTop = '8px';
+          right.textContent = 'Well done. That question naturally elicits the given answer.';
           feedbackDiv.appendChild(right);
         } else {
           feedbackDiv.innerHTML = '';
+          const badge = document.createElement('span');
+          badge.className = 'result-badge result-wrong';
+          badge.textContent = 'Incorrect';
+          feedbackDiv.appendChild(badge);
           const wrong = document.createElement('div');
           wrong.style.color = 'darkred';
           wrong.style.fontWeight = '600';
-          wrong.textContent = 'Incorrect.';
+          wrong.style.marginTop = '8px';
+          wrong.textContent = 'Your choice is not the most natural question to get that answer.';
           const correctQ = document.createElement('div');
           correctQ.style.marginTop = '6px';
           correctQ.innerHTML = '<strong>Correct question:</strong> ' + quizData[i].correct;
@@ -426,6 +482,8 @@
           feedbackDiv.appendChild(correctQ);
           feedbackDiv.appendChild(explain);
         }
+        // Lock the question after submission
+        disableQuestionRadios(i);
       }
 
       const scoreDiv = document.getElementById('score');
