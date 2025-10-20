@@ -51,6 +51,9 @@
   </main>
 
   <script>
+    // Adjusted quiz data:
+    // - Question 3 corrected so the answer does not start with "No" when the correct question is "Why...?"
+    // - Question 4 made unambiguous (duration only) so only "How long..." is correct
     const quizData = [
       {
         answer: "I'm going to London next week.",
@@ -60,7 +63,7 @@
           "Where are you going next week?",
           "How are you going to London?"
         ],
-        explanation: "The answer gives a time, so the question must ask 'When...?' about the date/time."
+        explanation: "The sentence gives a time, so the question must ask 'When...?' about the date/time."
       },
       {
         answer: "Yes, I've already finished the report.",
@@ -73,24 +76,26 @@
         explanation: "Present perfect ('I've already finished') matches the question 'Have you...?'"
       },
       {
-        answer: "No, I didn't go because I was ill.",
+        // REVISED: the answer no longer begins with 'No' so it can be a natural response to a 'Why...' question
+        answer: "I didn't go because I was ill.",
         correct: "Why didn't you go?",
         distractors: [
           "Did you go?",
           "When were you ill?",
           "Who was ill?"
         ],
-        explanation: "The reply explains the reason for not going, so it answers 'Why...?'"
+        explanation: "The reply explains the reason for not going, so it naturally answers 'Why didn't you go?'."
       },
       {
-        answer: "I studied French for five years at university.",
+        // REVISED: remove place reference so only duration is present
+        answer: "I studied French for five years.",
         correct: "How long did you study French?",
         distractors: [
           "Where did you study French?",
           "Did you study French at school?",
           "Why did you study French?"
         ],
-        explanation: "The answer gives a duration, so 'How long...?' is appropriate."
+        explanation: "The answer gives a duration, so 'How long...?' is the appropriate question."
       },
       {
         answer: "She moved here in 2010.",
