@@ -1,22 +1,438 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en-GB">
 <head>
-  <title>Interactive Quiz</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>British English Question-Formation Quiz</title>
+  <style>
+    :root {
+      --accent: #0078d4;
+      --accent-dark: #005a9e;
+      --bg: #ffffff;
+      --panel: #fafafa;
+      --muted: #666;
+      --border: #e6e6e6;
+    }
+    html,body { height:100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin: 24px;
+      color: #222;
+      background: var(--bg);
+      line-height: 1.45;
+    }
+    header { margin-bottom: 18px; }
+    h1 { margin: 0 0 6px 0; font-size: 1.35rem; }
+    p.lead { margin: 0 0 12px 0; color: var(--muted); max-width: 54rem; }
+    #quiz { margin-top: 12px; }
+    .question {
+      border: 1px solid var(--border);
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      background: var(--panel);
+    }
+    .question h4 { margin: 0 0 8px 0; font-size: 1rem; }
+    .question p { margin: 6px 0; }
+    .choices label { display:block; margin:6px 0; cursor:pointer; }
+    .feedback { margin-top: 8px; min-height: 1.2em; }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    button:hover { background: var(--accent-dark); }
+    #controls { margin-top: 16px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    #score { margin-top: 6px; font-weight:700; color:#222; }
+    footer { margin-top: 20px; color: var(--muted); font-size: 0.9rem; }
+    @media (max-width:520px) {
+      body { margin: 12px; }
+    }
+  </style>
 </head>
 <body>
-  <h1>HTML Basics Quiz</h1>
-  <form id="quiz-form">
-    <div>
-      <p>1. What does HTML stand for?</p>
-      <input type="radio" name="q1" value="a"> Home Tool Markup Language<br>
-      <input type="radio" name="q1" value="b"> HyperText Markup Language<br>
-      <input type="radio" name="q1" value="c"> Hyperlink Text Management Language<br>
-    </div>
-    <button type="button" onclick="submitQuiz()">Submit</button>
-  </form>
-  <div id="result"></div>
+  <header>
+    <h1>British English Question-Formation Quiz</h1>
+    <p class="lead">Each item shows a sentence given as the answer. Choose the question that would naturally elicit that answer. Four choices appear in random order for each question. Immediate feedback is shown after selecting an answer. Click "Submit All Answers" to finish and see your overall score.</p>
+  </header>
 
-  <script src="script.js"></script>
+  <main>
+    <div id="quiz" aria-live="polite"></div>
+
+    <div id="controls">
+      <button id="submitAll" type="button">Submit All Answers / Finish Test</button>
+      <div id="score" role="status" aria-atomic="true"></div>
+    </div>
+  </main>
+
+  <script>
+    // Quiz data: each item has answer (the sentence), correct question, three distractors, and an explanation.
+    const quizData = [
+      {
+        answer: "I'm going to London next week.",
+        correct: "When are you going to London?",
+        distractors: [
+          "Why are you going to London?",
+          "Where are you going next week?",
+          "How are you going to London?"
+        ],
+        explanation: "The sentence gives a time frame, so the natural question to obtain that answer is 'When...?' asking about time."
+      },
+      {
+        answer: "Yes, I've already finished the report.",
+        correct: "Have you finished the report?",
+        distractors: [
+          "Did you finish the report yesterday?",
+          "Who finished the report?",
+          "Why have you finished the report?"
+        ],
+        explanation: "The reply uses the present perfect ('I've already finished'), so the matching question uses the present perfect 'Have you...?'"
+      },
+      {
+        answer: "No, I didn't go because I was ill.",
+        correct: "Why didn't you go?",
+        distractors: [
+          "Did you go?",
+          "When were you ill?",
+          "Who was ill?"
+        ],
+        explanation: "The answer explains the reason for not going, so the appropriate question is 'Why didn't you go?'"
+      },
+      {
+        answer: "I studied French for five years at university.",
+        correct: "How long did you study French?",
+        distractors: [
+          "Where did you study French?",
+          "Did you study French at school?",
+          "Why did you study French?"
+        ],
+        explanation: "The answer gives a duration, so the question should ask 'How long...?'"
+      },
+      {
+        answer: "She moved here in 2010.",
+        correct: "When did she move here?",
+        distractors: [
+          "Why did she move here?",
+          "Who moved here in 2010?",
+          "Has she moved here?"
+        ],
+        explanation: "The answer provides a time (2010), so the appropriate question asks 'When...?'"
+      },
+      {
+        answer: "Because the weather was terrible.",
+        correct: "Why did you cancel the picnic?",
+        distractors: [
+          "When did you cancel the picnic?",
+          "Did you enjoy the picnic?",
+          "Where was the picnic?"
+        ],
+        explanation: "The answer gives a reason, so the question should be 'Why...?' about cancelling the picnic."
+      },
+      {
+        answer: "No, she hasn't seen the film yet.",
+        correct: "Has she seen the film yet?",
+        distractors: [
+          "Did she see the film?",
+          "When will she see the film?",
+          "Who saw the film?"
+        ],
+        explanation: "The reply uses present perfect negative, matching the question 'Has she... yet?'"
+      },
+      {
+        answer: "About £40.",
+        correct: "How much did it cost?",
+        distractors: [
+          "How long did it take?",
+          "Where did you buy it?",
+          "Who bought it?"
+        ],
+        explanation: "The answer gives a monetary amount, so the question should be 'How much...?'"
+      },
+      {
+        answer: "I prefer tea to coffee.",
+        correct: "Do you prefer tea or coffee?",
+        distractors: [
+          "Would you like some tea?",
+          "How do you take your tea?",
+          "Which is cheaper, tea or coffee?"
+        ],
+        explanation: "The answer expresses a preference between two options, so 'Do you prefer tea or coffee?' is correct."
+      },
+      {
+        answer: "Yes, I can speak a little Spanish.",
+        correct: "Can you speak Spanish?",
+        distractors: [
+          "How well do you speak Spanish?",
+          "Where did you learn Spanish?",
+          "Will you speak Spanish?"
+        ],
+        explanation: "The answer replies to ability: 'Can you...?' asks if the person is able to speak Spanish."
+      },
+      {
+        answer: "I bought it last Friday.",
+        correct: "When did you buy it?",
+        distractors: [
+          "Why did you buy it?",
+          "How much did it cost?",
+          "Where did you buy it?"
+        ],
+        explanation: "The sentence gives a time ('last Friday'), so the matching question is 'When...?'"
+      },
+      {
+        answer: "At the station, just outside platform 3.",
+        correct: "Where should I meet you?",
+        distractors: [
+          "What time should I meet you?",
+          "Who will be at platform 3?",
+          "Why are you at the station?"
+        ],
+        explanation: "The reply gives a location, so the natural question is 'Where...?'"
+      },
+      {
+        answer: "No, thank you. I'm full.",
+        correct: "Would you like more cake?",
+        distractors: [
+          "Are you full of cake?",
+          "Why are you full?",
+          "Do you like cake?"
+        ],
+        explanation: "The answer is a polite refusal to an offer of more cake, so 'Would you like more cake?' fits."
+      },
+      {
+        answer: "You need to take the second turning on the left.",
+        correct: "How do I get to the post office?",
+        distractors: [
+          "When does the post office open?",
+          "Is the post office open on Sunday?",
+          "Where is the second turning?"
+        ],
+        explanation: "The instruction describes directions, so the question is 'How do I get to...?'"
+      },
+      {
+        answer: "Because I forgot my keys.",
+        correct: "Why couldn't you get into the house?",
+        distractors: [
+          "When did you forget your keys?",
+          "Where are your keys?",
+          "Who had your keys?"
+        ],
+        explanation: "The answer gives the reason for not getting into the house, therefore 'Why couldn't you...?' is appropriate."
+      },
+      {
+        answer: "By train; it was much faster than driving.",
+        correct: "How did you travel to Manchester?",
+        distractors: [
+          "When did you travel to Manchester?",
+          "Did you like Manchester?",
+          "Why did you choose Manchester?"
+        ],
+        explanation: "The reply states the mode of transport, so the question should be 'How did you travel...?'"
+      },
+      {
+        answer: "I've lived here since 2018.",
+        correct: "How long have you lived here?",
+        distractors: [
+          "When did you move here?",
+          "Did you live here before 2018?",
+          "Why did you move here in 2018?"
+        ],
+        explanation: "The answer gives a period from 2018 to now, so 'How long have you...?' (present perfect) is the right form."
+      },
+      {
+        answer: "No, it's not my responsibility.",
+        correct: "Is that your responsibility?",
+        distractors: [
+          "Whose responsibility is it?",
+          "Why isn't it your responsibility?",
+          "When is it your responsibility?"
+        ],
+        explanation: "The statement directly answers a yes/no question about responsibility, so 'Is that your responsibility?' matches."
+      },
+      {
+        answer: "She'll arrive at about half past three.",
+        correct: "When will she arrive?",
+        distractors: [
+          "Why will she arrive?",
+          "Who will arrive at half past three?",
+          "Where will she arrive?"
+        ],
+        explanation: "The answer provides a time in the future, so the correct question is 'When will she arrive?'"
+      },
+      {
+        answer: "No, I haven't met him before.",
+        correct: "Have you met him before?",
+        distractors: [
+          "When did you meet him?",
+          "Who hasn't met him?",
+          "Why haven't you met him?"
+        ],
+        explanation: "The reply uses present perfect negative to state no prior meeting, matching 'Have you met him before?'"
+      }
+    ];
+
+    // Utilities
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function createQuestionElement(itemIndex, item) {
+      const container = document.createElement('section');
+      container.className = 'question';
+      container.setAttribute('aria-labelledby', `q${itemIndex}_label`);
+
+      const qNumber = document.createElement('h4');
+      qNumber.id = `q${itemIndex}_label`;
+      qNumber.textContent = `Question ${itemIndex + 1}`;
+      container.appendChild(qNumber);
+
+      const answerPara = document.createElement('p');
+      answerPara.innerHTML = '<strong>Given answer:</strong> ' + item.answer;
+      container.appendChild(answerPara);
+
+      const form = document.createElement('div');
+      form.className = 'choices';
+      form.setAttribute('role', 'radiogroup');
+      form.setAttribute('aria-label', 'Choices');
+
+      // Build choices array with correct + distractors and shuffle
+      const choices = [ {text: item.correct, correct: true} ]
+        .concat(item.distractors.map(d => ({text: d, correct: false})));
+      shuffle(choices);
+
+      choices.forEach((choice, idx) => {
+        const id = `q${itemIndex}_c${idx}`;
+        const label = document.createElement('label');
+        label.setAttribute('for', id);
+        label.style.display = 'block';
+        label.style.margin = '6px 0';
+        label.style.cursor = 'pointer';
+
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = `q${itemIndex}`;
+        input.value = choice.text;
+        input.id = id;
+        input.dataset.correct = choice.correct ? '1' : '0';
+        input.style.marginRight = '8px';
+        input.setAttribute('aria-checked', 'false');
+
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(choice.text));
+        form.appendChild(label);
+      });
+
+      const feedback = document.createElement('div');
+      feedback.className = 'feedback';
+      feedback.setAttribute('aria-live', 'polite');
+      feedback.style.marginTop = '8px';
+      container.appendChild(form);
+      container.appendChild(feedback);
+
+      return container;
+    }
+
+    // Render quiz
+    const quizDiv = document.getElementById('quiz');
+    quizData.forEach((item, i) => {
+      quizDiv.appendChild(createQuestionElement(i, item));
+    });
+
+    // Per-question immediate feedback
+    quizDiv.addEventListener('change', (e) => {
+      if (e.target.matches('input[type="radio"]')) {
+        const name = e.target.name; // q#
+        const qIndex = parseInt(name.replace('q',''), 10);
+        const selectedCorrect = e.target.dataset.correct === '1';
+        const feedbackDiv = e.target.closest('.question').querySelector('.feedback');
+        feedbackDiv.innerHTML = '';
+        if (selectedCorrect) {
+          const right = document.createElement('div');
+          right.style.color = 'green';
+          right.style.fontWeight = '600';
+          right.textContent = 'Correct.';
+          feedbackDiv.appendChild(right);
+        } else {
+          const wrong = document.createElement('div');
+          wrong.style.color = 'darkred';
+          wrong.style.fontWeight = '600';
+          wrong.textContent = 'Incorrect.';
+          const correctQ = document.createElement('div');
+          correctQ.style.marginTop = '6px';
+          correctQ.innerHTML = '<strong>Correct question:</strong> ' + quizData[qIndex].correct;
+          const explain = document.createElement('div');
+          explain.style.marginTop = '6px';
+          explain.innerHTML = '<strong>Explanation:</strong> ' + quizData[qIndex].explanation;
+          feedbackDiv.appendChild(wrong);
+          feedbackDiv.appendChild(correctQ);
+          feedbackDiv.appendChild(explain);
+        }
+      }
+    });
+
+    // Submit all and calculate score
+    document.getElementById('submitAll').addEventListener('click', () => {
+      let total = quizData.length;
+      let correctCount = 0;
+      for (let i = 0; i < total; i++) {
+        const selected = document.querySelector('input[name="q' + i + '"]:checked');
+        const qDiv = document.querySelectorAll('.question')[i];
+        const feedbackDiv = qDiv.querySelector('.feedback');
+        if (!selected) {
+          feedbackDiv.innerHTML = '';
+          const warn = document.createElement('div');
+          warn.style.color = 'darkorange';
+          warn.style.fontWeight = '600';
+          warn.textContent = 'No answer selected. Marked incorrect.';
+          const correctQ = document.createElement('div');
+          correctQ.style.marginTop = '6px';
+          correctQ.innerHTML = '<strong>Correct question:</strong> ' + quizData[i].correct;
+          const explain = document.createElement('div');
+          explain.style.marginTop = '6px';
+          explain.innerHTML = '<strong>Explanation:</strong> ' + quizData[i].explanation;
+          feedbackDiv.appendChild(warn);
+          feedbackDiv.appendChild(correctQ);
+          feedbackDiv.appendChild(explain);
+          continue;
+        }
+        if (selected.dataset.correct === '1') {
+          correctCount++;
+          feedbackDiv.innerHTML = '';
+          const right = document.createElement('div');
+          right.style.color = 'green';
+          right.style.fontWeight = '600';
+          right.textContent = 'Correct.';
+          feedbackDiv.appendChild(right);
+        } else {
+          feedbackDiv.innerHTML = '';
+          const wrong = document.createElement('div');
+          wrong.style.color = 'darkred';
+          wrong.style.fontWeight = '600';
+          wrong.textContent = 'Incorrect.';
+          const correctQ = document.createElement('div');
+          correctQ.style.marginTop = '6px';
+          correctQ.innerHTML = '<strong>Correct question:</strong> ' + quizData[i].correct;
+          const explain = document.createElement('div');
+          explain.style.marginTop = '6px';
+          explain.innerHTML = '<strong>Explanation:</strong> ' + quizData[i].explanation;
+          feedbackDiv.appendChild(wrong);
+          feedbackDiv.appendChild(correctQ);
+          feedbackDiv.appendChild(explain);
+        }
+      }
+
+      const scoreDiv = document.getElementById('score');
+      const percent = Math.round((correctCount / total) * 100);
+      scoreDiv.textContent = 'You scored ' + correctCount + ' out of ' + total + ' (' + percent + '%).';
+      scoreDiv.scrollIntoView({behavior: 'smooth'});
+    });
+  </script>
 </body>
 </html>
